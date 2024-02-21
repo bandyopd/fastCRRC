@@ -1,0 +1,125 @@
+---
+title: "Introduction to the fastCRRC package"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+## Introduction
+
+`fastCRRC` is the R package to fit the marginal competing risks regression model for large correlated clustered observations. Let $i=1,2,\ldots,n$ denote the clusters where each cluster has $k=1, \ldots, M_i$ observations. For the $k$th member in cluster $i$,  let $T_{ik}$ and $C_{ik}$ denote the failure and right censoring times, respectively. Then for right censored data, the corresponding observable random variables become $X_{ik}= \min(T_{ik}, C_{ik})$ and $\xi_{ik} = I(T_{ik} \leq C_{ik})\epsilon_{ik}$ where $\epsilon_{ik} \in \{1, \ldots,l\}$ denotes the cause of failure,  $I(\cdot)$ is the indicator function, and $Z_{ik} = (Z_{1ik},...,Z_{pik})^{\top}$ is a $p \times 1$ vector of time-independent covariates for individual $k$ in cluster $i$. 
+
+The marginal cumulative incidence function conditional on the covariates is defined as $F_1(t;Z_{ik}) = P(T_{ik} \leq t, \, \epsilon_{ik} = 1|Z_{ik})$ and the marginal subdistribution hazard is modeled as
+
+\begin{equation}
+\lambda_1(t; Z_{ik}) = \lambda_{10}(t) \exp(\beta'_{0}Z_{ik}),
+\end{equation}
+
+where $\lambda_{10}(\cdot)$ is a completely unspecified baseline subdistribution hazard function and $\beta_0$ is a $p \times 1$ vector of unknown regression parameters. 
+
+
+## Usages
+
+Installation of `fastCRRC` package can be done by
+```{r results='hide', message=FALSE, warning=FALSE,eval=FALSE}
+devtools::install_github(repo="edemprd/fastCRRC")
+```
+
+or
+```{r results='hide', message=FALSE, warning=FALSE}
+base::require("fastCRRC")
+```
+
+
+`fastCrrC()` function has the following arguments:
+```{r eval=FALSE, message=FALSE, warning=FALSE}
+fastCrrC(formula, data, subset,cause, id, fitter = c("fastCrr", "crrc"),B = 0, 
+         bMeth = c("twoStep", "cluStep"), 
+         mcontrols = control(gtol=1e-6,maxiter=1000, eps = 1E-6,getBreslowJumps = TRUE, 
+                             standardize = TRUE,cindex = FALSE, multicore = FALSE, 
+                             mcores=detectCores()-1))
+```
+
+See the detailed description from `help(fastCrrC)`.
+
+## Data and model fit
+
+We first simulate CCR data with two covariates, similar to the data simulation setting of Defor et al. (2024). 
+
+```{r ,warning=FALSE}
+library(fastCRRC)
+set.seed(1)
+dat <- simCR(n = 10, al = .3, ga = .6, clsize = 2:10, summary = TRUE)
+```
+
+There are two ways to fit the data to obtain the model estimates using the `fitter` argument in the `fastCrrC`. One uses the two-way linear scan with bootstrap for variance estimation (`fitter="fastCrr"`) and the other uses the traditional marginal CCR model using asymptotic variance estimation (`fitter="crrc"`). We recommend the two-way linear scan for $n > 5000$ or large sample or cluster and cluster sizes. We recommend that the number of bootstrap samples should be `B=100` when using the two way linear scan for large samples. However, for smaller sample sizes we recommend increasing the number of bootstrap samples to `B=200` or as desired to obtain stable standard errors. However, for either fitter arguments to print the standard errors $B$ must be $>0$.
+
+```{r ,warning=FALSE,cache=TRUE}
+# Two-way linear scan optimized for large datasets
+fit1 <- fastCrrC(Surv(time, status) ~ Z.1 + Z.2, data = dat, B = 200, fitter = "fastCrr")
+summary(fit1)
+
+# Traditional CCR with asymptotic variance
+fit2 <- fastCrrC(Surv(time, status) ~ Z.1 + Z.2, data = dat, B=100, fitter = "crrc")
+summary(fit2)
+```
+
+#### Concordance index
+
+If a C-index is desired, we have conveniently included its implementation following the procedures outlined by Wolbers et al. (2014) for CCR data. To compute and print the C-index we only allow it when `fitter="fastCrr"`.
+```{r ,warning=FALSE,cache=TRUE}
+fit1 <- fastCrrC(Surv(time, status) ~ Z.1 + Z.2, data = dat, B = 200, fitter = "fastCrr", mcontrols = control(cindex=TRUE))
+
+summary(fit1)
+```
+Of note, the `mcontrols` arguments in `fastCrrC` introduces an array of options for the user aside setting the C-index. It also has specific arguments applicable to only when `fitter="crrc"`
+
+#### Fitting large data
+
+Next, we demonstrate how to optimize the model using the `fitter="fastCrr"` in the `fastCrrC` function when the cluster sizes are large. We can also take advantage of the `multicore` argument in  `mcontrols`.
+```{r ,warning=FALSE,cache=TRUE}
+## Generating the data
+set.seed(1)
+datL <- simCR(n = 200, al = .3, ga = .6, clsize = 2:500, summary = TRUE)
+fitL <- fastCrrC(Surv(time, status) ~ Z.1 + Z.2, data = datL, B = 100, fitter = "fastCrr", 
+                 mcontrols = control(cindex=TRUE, multicore = TRUE))
+## Fitting the model
+summary(fitL)
+
+```
+
+## Plotting the CIFs
+
+To plot the CIFs we can easily use the `plot` function in our package. First, we can generate the data as follows using simCR(). However, for the purposes of illustration we generate five causes of failure.
+
+```{r ,warning=FALSE,cache=TRUE,fig.height = 3, fig.width = 5, fig.align = "center",results="hide"}
+## Generate the data using simCR() 
+set.seed(1)
+dat <- simCR(n = 100, al = .3, ga = .6, cen = .4, clsize = 2:5, summary = TRUE)
+dat$status <- I(dat$status > 0)* sample(1:5, nrow(dat), TRUE)
+
+## fit the model
+foo <- fastCrrC(Surv(time, status) ~ Z.1 + Z.2, data = dat)
+
+## plot CIF for the event of interest
+plot(foo)
+plot(foo, newdata = data.frame(Z.1 = .5, Z.2 = 1))
+## Plotting CIFs that involves other causes will automatically update the fit
+plot(foo, type = "all")
+plot(foo, type = "all", newdata = data.frame(Z.1 = .5, Z.2 = 1))
+## Stacking CIF
+plot(foo, type = "stack")
+plot(foo, type = "stack", newdata = data.frame(Z.1 = .5, Z.2 = 1))
+```
+
+## References

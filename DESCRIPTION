@@ -1,0 +1,30 @@
+Package: fastCRRC
+Title: Fast Competing risks regression for Clustered data
+Version: 0.0.2
+Authors@R: c(
+              person("Edem", "Defor", role = c("aut", "cre"), email = "edemprd@gmail.com"),
+              person("Steven", "Chiou", role = c("aut"), email = "schiou@mail.smu.edu"),
+              person("Dipankar", "Bandyopadhyay", role = c("aut"), email = "dbandyop@vcu.edu")
+              )
+Description: The clustered competing risks regression model assesses the marginal effects of covariates
+    on the respective cumulative incidence functions, while accommodating the correlation induced due to 
+    clustering. An implementation of the 'forward-backward scan' algorithm for large clustered competing 
+    risks datasets is provided. 
+    For further information, see (Defor E, Chiou S, Srivastava S and Bandyopadhyay D (2024) doi:<0.1.xx>) and
+    and (Zhou B, Fine J, Latouche A and Labopin M (2011) doi:<10.1093/biostatistics/kxr032>). 
+Depends: R (>= 4.2.0)
+License: GPL (>= 3)
+Encoding: UTF-8
+Imports: survival,
+    fastcmprsk,
+    crrSC,
+    MASS, 
+    mcreplicate, 
+    foreach, 
+    ggplot2, 
+    stabledist
+RoxygenNote: 7.2.3
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
