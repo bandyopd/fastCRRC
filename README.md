@@ -24,7 +24,7 @@ random variables become $X_{ik}= \min(T_{ik}, C_{ik})$ and
 $\xi_{ik} = I(T_{ik} \leq C_{ik})\epsilon_{ik}$ where
 $\epsilon_{ik} \in \{1, \ldots,l\}$ denotes the cause of failure,
 $I(\cdot)$ is the indicator function, and
-$Z_{ik} = (Z_{1ik},...,Z_{pik})^{\top}$ is a $p \times 1$ vector of
+$Z_{ik} = (Z_{ik1},...,Z_{ikp})^{\top}$ is a $p \times 1$ vector of
 time-independent covariates for individual $k$ in cluster $i$.
 
 The marginal cumulative incidence function conditional on the covariates
@@ -32,7 +32,7 @@ is defined as
 $F_1(t;Z_{ik}) = P(T_{ik} \leq t, \, \epsilon_{ik} = 1|Z_{ik})$ and the
 marginal subdistribution hazard is modeled as
 
-$$\lambda_1(t; Z_{ik}) = \lambda_{10}(t) \exp(\beta^T_{0}Z_{ik}),$$
+$$\lambda_1(t; Z_{ik}) = \lambda_{10}(t) \exp(\beta^\top_{0}Z_{ik}),$$
 
 where $\lambda_{10}(\cdot)$ is a completely unspecified baseline
 subdistribution hazard function and $\beta_0$ is a $p \times 1$ vector
@@ -88,5 +88,14 @@ summary(fit1)
 #> Z.1   0.4390    0.2709   1.621  0.1050
 #> Z.2   0.0181    1.2406   0.015  0.9884
 ```
+
+### References
+
+- Zhou, B., Fine, J., Latouche, A., & Labopin, M. (2012). Competing
+  risks regression for clustered data. Biostatistics, 13(3), 371-383.
+
+- Kawaguchi, E. S., Shen, J. I., Suchard, M. A., & Li, G. (2021).
+  Scalable algorithms for large competing risks data. Journal of
+  Computational and Graphical Statistics, 30(3), 685-693.
 
 <!--You'll still need to render `README.Rmd` regularly, to keep `README.md` up-to-date. `devtools::build_readme()` is handy for this.-->
