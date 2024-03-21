@@ -34,7 +34,7 @@ $$\lambda_1(t; Z_{ik}) = \lambda_{10}(t) \exp(\beta^\top_{0}Z_{ik}),$$
 where $\lambda_{10}(\cdot)$ is a completely unspecified baseline subdistribution hazard function and $\beta_0$ is a $p \times 1$ vector of unknown regression parameters. 
 
 
-Vignettes is available [here](https://htmlpreview.github.io/?https://raw.githubusercontent.com/edemprd/fastCRRC/main/vignettes/fastCRRC.html?token=GHSAT0AAAAAACM7E7HBD4NOILJHPHU7SD6UZONE2GA)
+Vignettes is available [here](https://html-preview.github.io/?url=https://github.com/edemprd/fastCRRC/blob/main/vignettes/fastCRRC.html)
 
 
 ### Installation

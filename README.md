@@ -39,7 +39,7 @@ subdistribution hazard function and $\beta_0$ is a $p \times 1$ vector
 of unknown regression parameters.
 
 Vignettes is available
-[here](https://htmlpreview.github.io/?https://raw.githubusercontent.com/edemprd/fastCRRC/main/vignettes/fastCRRC.html?token=GHSAT0AAAAAACM7E7HBD4NOILJHPHU7SD6UZONE2GA)
+[here](https://html-preview.github.io/?url=https://github.com/edemprd/fastCRRC/blob/main/vignettes/fastCRRC.html)
 
 ### Installation
 
