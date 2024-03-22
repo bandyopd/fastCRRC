@@ -87,7 +87,7 @@ simCR <- function(n = 100, al = .3, ga = .3, rho = 0,
     cat("Before censoring:\n")
     cat("Proportion of event 1:                         ", round(mean(dat$events == 1), 3), "\n")
     cat("Proportion of event 2:                         ", round(mean(dat$events == 2), 3), "\n")
-    cat("Before censoring:\n")
+    cat("After censoring:\n")
     cat("Proportion of event 1:                         ", round(mean(dat$status == 1), 3), "\n")
     cat("Proportion of event 2:                         ", round(mean(dat$status == 2), 3), "\n")
     cat("Average proportion of event 1 per cluster:     ",

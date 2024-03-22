@@ -352,7 +352,7 @@ corresponding observable random variables become <span class="math inline">\(X_{
 C_{ik})\epsilon_{ik}\)</span> where <span class="math inline">\(\epsilon_{ik} \in \{1, \ldots,l\}\)</span> denotes
 the cause of failure, <span class="math inline">\(I(\cdot)\)</span> is
 the indicator function, and <span class="math inline">\(Z_{ik} =
-(Z_{1ik},...,Z_{pik})^{\top}\)</span> is a <span class="math inline">\(p
+(Z_{ik1},...,Z_{ikp})^{\top}\)</span> is a <span class="math inline">\(p
 \times 1\)</span> vector of time-independent covariates for individual
 <span class="math inline">\(k\)</span> in cluster <span class="math inline">\(i\)</span>.</p>
 <p>The marginal cumulative incidence function conditional on the
@@ -360,7 +360,7 @@ covariates is defined as <span class="math inline">\(F_1(t;Z_{ik}) =
 P(T_{ik} \leq t, \, \epsilon_{ik} = 1|Z_{ik})\)</span> and the marginal
 subdistribution hazard is modeled as</p>
 <p><span class="math display">\[\begin{equation}
-\lambda_1(t; Z_{ik}) = \lambda_{10}(t) \exp(\beta&#39;_{0}Z_{ik}),
+\lambda_1(t; Z_{ik}) = \lambda_{10}(t) \exp(\beta^\top_{0}Z_{ik}),
 \end{equation}\]</span></p>
 <p>where <span class="math inline">\(\lambda_{10}(\cdot)\)</span> is a
 completely unspecified baseline subdistribution hazard function and
@@ -381,10 +381,33 @@ parameters.</p>
 <span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>                             <span class="at">mcores=</span><span class="fu">detectCores</span>()<span class="sc">-</span><span class="dv">1</span>))</span></code></pre></div>
 <p>See the detailed description from <code>help(fastCrrC)</code>.</p>
 </div>
-<div id="data-and-model-fit" class="section level2">
-<h2>Data and model fit</h2>
-<p>We first simulate CCR data with two covariates, similar to the data
-simulation setting of Defor et al. (2024).</p>
+<div id="data" class="section level2">
+<h2>Data</h2>
+<p>The <code>simCR()</code> function is designed to simulate competing
+risk data, particularly for multicenter studies or studies involving
+correlated data within clusters. We first provide an overview of the
+<code>simCR()</code> usage, its arguments and demonstrate how to
+simulate CCR data with two covariates, similar to the data simulation
+setting of Defor et al. (2024).</p>
+<p>The <code>simCR()</code> function takes several arguments as its
+input and then provides the simulated dataframe. The following are the
+arguments <code>simCR()</code> allows the user to use.</p>
+<ul>
+<li><code>n</code>: Number of clusters (default = 100).</li>
+<li><code>al</code> and <code>ga</code>: Numerical values from a
+positive stable distribution for causes 1 and 2, controlling
+within-cluster correlation (default = 0.3). A value closer to zero
+indicates a larger within-cluster correlation.</li>
+<li><code>rho</code>: The correlation among the covariates.</li>
+<li><code>cen</code>: Censoring rate, with allowed values of 0%, 20%,
+40%, 60%, 65%, and 80%.</li>
+<li><code>clsize</code>: Range of cluster sizes, specified as a vector
+(e.g., 2:50).</li>
+<li><code>summary</code>: When TRUE, prints a summary of the generated
+data.</li>
+</ul>
+<p>To generate data with default settings and view a summary of the
+generated data, the details are given as follows:</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">library</span>(fastCRRC)</span>
 <span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
 <span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>dat <span class="ot">&lt;-</span> <span class="fu">simCR</span>(<span class="at">n =</span> <span class="dv">10</span>, <span class="at">al =</span> .<span class="dv">3</span>, <span class="at">ga =</span> .<span class="dv">6</span>, <span class="at">clsize =</span> <span class="dv">2</span><span class="sc">:</span><span class="dv">10</span>, <span class="at">summary =</span> <span class="cn">TRUE</span>)</span>
@@ -402,20 +425,48 @@ simulation setting of Defor et al. (2024).</p>
 <span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="co">#&gt; Proportion of event 1:                          0.253 </span></span>
 <span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="co">#&gt; Proportion of event 2:                          0.025 </span></span>
 <span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="co">#&gt; Average proportion of event 1 per cluster:      0.235 </span></span>
-<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a><span class="co">#&gt; Average proportion of event 2 per cluster:      0.029</span></span></code></pre></div>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a><span class="co">#&gt; Average proportion of event 2 per cluster:      0.029</span></span>
+<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a><span class="fu">str</span>(dat)</span>
+<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a><span class="co">#&gt; &#39;data.frame&#39;:    79 obs. of  5 variables:</span></span>
+<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a><span class="co">#&gt;  $ id    : int  1 1 1 1 1 1 1 2 2 2 ...</span></span>
+<span id="cb4-22"><a href="#cb4-22" tabindex="-1"></a><span class="co">#&gt;  $ time  : num  0.00409 0.00975 0.01863 0.00671 0.01905 ...</span></span>
+<span id="cb4-23"><a href="#cb4-23" tabindex="-1"></a><span class="co">#&gt;  $ status: num  0 0 0 2 0 0 2 0 0 0 ...</span></span>
+<span id="cb4-24"><a href="#cb4-24" tabindex="-1"></a><span class="co">#&gt;  $ Z.1   : num  -0.91 -0.384 -1.682 0.636 0.462 ...</span></span>
+<span id="cb4-25"><a href="#cb4-25" tabindex="-1"></a><span class="co">#&gt;  $ Z.2   : num  0.0218 0.0218 0.0218 0.0218 0.0218 ...</span></span></code></pre></div>
+<p>The simluated data gives the <code>id</code> which is the cluster
+identifier. The event time is given as <code>time</code> and the event
+status is given as <code>status</code>. Our simulation provides two
+covariates, <code>Z.1</code> and <code>Z.2</code>. For illustration
+purposes, <code>Z.1</code> is generated at the subject specific level
+and <code>Z.2</code> is a generated at the cluster level.</p>
+<p>When <code>summary=TRUE</code> an overview of the proportion of
+events in the simulated data is printed. In this simulated data example,
+only 10 clusters are generated with cluster sizes ranging from 2 to 10.
+This simulated data shows an average of 7.9 observations per cluster,
+with an overall observed censoring rate of 72.2%. Initially, before
+censoring, 77.2% of events were classified as event 1 (the parameter of
+interest) and 22.8% as event 2 (the competing event). The results due to
+censoring are also presented in the <code>summary</code>. The average
+proportions of the outcomes per cluster were thus 23.5% for event 1 and
+2.9% for event 2.</p>
+</div>
+<div id="model-fit" class="section level2">
+<h2>Model fit</h2>
 <p>There are two ways to fit the data to obtain the model estimates
 using the <code>fitter</code> argument in the <code>fastCrrC</code>. One
 uses the two-way linear scan with bootstrap for variance estimation
 (<code>fitter=&quot;fastCrr&quot;</code>) and the other uses the traditional
 marginal CCR model using asymptotic variance estimation
-(<code>fitter=&quot;crrc&quot;</code>). We recommend the two-way linear scan for
-<span class="math inline">\(n &gt; 5000\)</span> or large sample or
-cluster and cluster sizes. We recommend that the number of bootstrap
-samples should be <code>B=100</code> when using the two way linear scan
-for large samples. However, for smaller sample sizes we recommend
-increasing the number of bootstrap samples to <code>B=200</code> or as
-desired to obtain stable standard errors. However, for either fitter
-arguments to print the standard errors <span class="math inline">\(B\)</span> must be <span class="math inline">\(&gt;0\)</span>.</p>
+(<code>fitter=&quot;crrc&quot;</code>). Even though, we recommend the two-way
+linear scan for large sample or cluster sizes due to its computational
+superiority, we suggest to use it for any given scenario. We recommend
+that the number of bootstrap samples should be <code>B=100</code> when
+using the two way linear scan for large samples. However, for smaller
+sample sizes we recommend increasing the number of bootstrap samples to
+<code>B=200</code> or as desired to obtain stable standard errors.
+However, to obtain the standard errors when
+<code>fitter=&quot;fastCrr&quot;</code>, then, specific <code>B&gt;0</code> in the
+argument.</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># Two-way linear scan optimized for large datasets</span></span>
 <span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>fit1 <span class="ot">&lt;-</span> <span class="fu">fastCrrC</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> Z<span class="fl">.1</span> <span class="sc">+</span> Z<span class="fl">.2</span>, <span class="at">data =</span> dat, <span class="at">B =</span> <span class="dv">200</span>, <span class="at">fitter =</span> <span class="st">&quot;fastCrr&quot;</span>)</span>
 <span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="fu">summary</span>(fit1)</span>
@@ -425,8 +476,8 @@ arguments to print the standard errors <span class="math inline">\(B\)</span> mu
 <span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt; fastCrrC Estimator</span></span>
 <span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co">#&gt;     estimate std.Error z.value p.value</span></span>
-<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co">#&gt; Z.1   0.4390    0.3010   1.459  0.1447</span></span>
-<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co">#&gt; Z.2   0.0181    1.2235   0.015  0.9882</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co">#&gt; Z.1   0.4390    0.3109   1.412  0.1579</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co">#&gt; Z.2   0.0181    1.3373   0.014  0.9892</span></span>
 <span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a></span>
 <span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="co"># Traditional CCR with asymptotic variance</span></span>
 <span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a>fit2 <span class="ot">&lt;-</span> <span class="fu">fastCrrC</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> Z<span class="fl">.1</span> <span class="sc">+</span> Z<span class="fl">.2</span>, <span class="at">data =</span> dat, <span class="at">B=</span><span class="dv">100</span>, <span class="at">fitter =</span> <span class="st">&quot;crrc&quot;</span>)</span>
@@ -437,8 +488,8 @@ arguments to print the standard errors <span class="math inline">\(B\)</span> mu
 <span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a><span class="co">#&gt; fastCrrC Estimator</span></span>
 <span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a><span class="co">#&gt;     estimate std.Error z.value p.value</span></span>
-<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a><span class="co">#&gt; Z.1   0.4390    0.2719   1.614  0.1064</span></span>
-<span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a><span class="co">#&gt; Z.2   0.0181    1.1330   0.016  0.9873</span></span></code></pre></div>
+<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a><span class="co">#&gt; Z.1   0.4390    0.3253   1.349  0.1772</span></span>
+<span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a><span class="co">#&gt; Z.2   0.0181    1.1947   0.015  0.9879</span></span></code></pre></div>
 <div id="concordance-index" class="section level4">
 <h4>Concordance index</h4>
 <p>If a C-index is desired, we have conveniently included its
@@ -469,39 +520,39 @@ when <code>fitter=&quot;crrc&quot;</code></p>
 <code>fitter=&quot;fastCrr&quot;</code> in the <code>fastCrrC</code> function when
 the cluster sizes are large. We can also take advantage of the
 <code>multicore</code> argument in <code>mcontrols</code>.</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>datL <span class="ot">&lt;-</span> <span class="fu">simCR</span>(<span class="at">n =</span> <span class="dv">200</span>, <span class="at">al =</span> .<span class="dv">3</span>, <span class="at">ga =</span> .<span class="dv">6</span>, <span class="at">clsize =</span> <span class="dv">2</span><span class="sc">:</span><span class="dv">500</span>, <span class="at">summary =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="co">#&gt; Call: </span></span>
-<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="co">#&gt; simCR(n = 200, al = 0.3, ga = 0.6, clsize = 2:500, summary = TRUE)</span></span>
-<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="co">#&gt; Number of clusters generated:                    200 </span></span>
-<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="co">#&gt; Average number of observations per cluster:     238.285 </span></span>
-<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="co">#&gt; Overall observed censoring rate:                0.734 </span></span>
-<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co">#&gt; Before censoring:</span></span>
-<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="co">#&gt; Proportion of event 1:                          0.596 </span></span>
-<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="co">#&gt; Proportion of event 2:                          0.404 </span></span>
-<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="co">#&gt; Before censoring:</span></span>
-<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="co">#&gt; Proportion of event 1:                          0.236 </span></span>
-<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="co">#&gt; Proportion of event 2:                          0.03 </span></span>
-<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="co">#&gt; Average proportion of event 1 per cluster:      0.242 </span></span>
-<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a><span class="co">#&gt; Average proportion of event 2 per cluster:      0.033</span></span>
-<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a>fitL <span class="ot">&lt;-</span> <span class="fu">fastCrrC</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> Z<span class="fl">.1</span> <span class="sc">+</span> Z<span class="fl">.2</span>, <span class="at">data =</span> datL, <span class="at">B =</span> <span class="dv">100</span>, <span class="at">fitter =</span> <span class="st">&quot;fastCrr&quot;</span>, </span>
-<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a>                 <span class="at">mcontrols =</span> <span class="fu">control</span>(<span class="at">cindex=</span><span class="cn">TRUE</span>, <span class="at">multicore =</span> <span class="cn">TRUE</span>))</span>
-<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a></span>
-<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a><span class="fu">summary</span>(fitL)</span>
-<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a><span class="co">#&gt; Call:</span></span>
-<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a><span class="co">#&gt; fastCrrC(formula = Surv(time, status) ~ Z.1 + Z.2, data = datL, </span></span>
-<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a><span class="co">#&gt;     fitter = &quot;fastCrr&quot;, B = 100, mcontrols = control(cindex = TRUE, </span></span>
-<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a><span class="co">#&gt;         multicore = TRUE))</span></span>
-<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a><span class="co">#&gt; fastCrrC Estimator</span></span>
-<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a><span class="co">#&gt;     estimate std.Error z.value p.value    </span></span>
-<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a><span class="co">#&gt; Z.1   0.4937    0.0099  49.627  &lt;2e-16 ***</span></span>
-<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a><span class="co">#&gt; Z.2  -0.5324    0.1681  -3.167  0.0015 ** </span></span>
-<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a><span class="co">#&gt; ---</span></span>
-<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a><span class="co">#&gt; Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</span></span>
-<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a><span class="co">#&gt; Concordance index:  0.7773013</span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="do">## Generating the data</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>datL <span class="ot">&lt;-</span> <span class="fu">simCR</span>(<span class="at">n =</span> <span class="dv">200</span>, <span class="at">al =</span> .<span class="dv">3</span>, <span class="at">ga =</span> .<span class="dv">6</span>, <span class="at">clsize =</span> <span class="dv">2</span><span class="sc">:</span><span class="dv">5000</span>, <span class="at">summary =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="co">#&gt; Call: </span></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="co">#&gt; simCR(n = 200, al = 0.3, ga = 0.6, clsize = 2:5000, summary = TRUE)</span></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="co">#&gt; Number of clusters generated:                    200 </span></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co">#&gt; Average number of observations per cluster:     2361.53 </span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co">#&gt; Overall observed censoring rate:                0.735 </span></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="co">#&gt; Before censoring:</span></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="co">#&gt; Proportion of event 1:                          0.595 </span></span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="co">#&gt; Proportion of event 2:                          0.405 </span></span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="co">#&gt; Before censoring:</span></span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="co">#&gt; Proportion of event 1:                          0.238 </span></span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a><span class="co">#&gt; Proportion of event 2:                          0.027 </span></span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a><span class="co">#&gt; Average proportion of event 1 per cluster:      0.242 </span></span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a><span class="co">#&gt; Average proportion of event 2 per cluster:      0.031</span></span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a>fitL <span class="ot">&lt;-</span> <span class="fu">fastCrrC</span>(<span class="fu">Surv</span>(time, status) <span class="sc">~</span> Z<span class="fl">.1</span> <span class="sc">+</span> Z<span class="fl">.2</span>, <span class="at">data =</span> datL, <span class="at">B =</span> <span class="dv">100</span>, <span class="at">fitter =</span> <span class="st">&quot;fastCrr&quot;</span>, </span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a>                 <span class="at">mcontrols =</span> <span class="fu">control</span>(<span class="at">cindex=</span><span class="cn">FALSE</span>, <span class="at">multicore =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a><span class="do">## Fitting the model</span></span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a><span class="fu">summary</span>(fitL)</span>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a><span class="co">#&gt; Call:</span></span>
+<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a><span class="co">#&gt; fastCrrC(formula = Surv(time, status) ~ Z.1 + Z.2, data = datL, </span></span>
+<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a><span class="co">#&gt;     fitter = &quot;fastCrr&quot;, B = 100, mcontrols = control(cindex = FALSE, </span></span>
+<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a><span class="co">#&gt;         multicore = TRUE))</span></span>
+<span id="cb7-27"><a href="#cb7-27" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb7-28"><a href="#cb7-28" tabindex="-1"></a><span class="co">#&gt; fastCrrC Estimator</span></span>
+<span id="cb7-29"><a href="#cb7-29" tabindex="-1"></a><span class="co">#&gt;     estimate std.Error z.value p.value    </span></span>
+<span id="cb7-30"><a href="#cb7-30" tabindex="-1"></a><span class="co">#&gt; Z.1   0.5139    0.0028  180.65  &lt;2e-16 ***</span></span>
+<span id="cb7-31"><a href="#cb7-31" tabindex="-1"></a><span class="co">#&gt; Z.2  -0.5850    0.1523   -3.84   1e-04 ***</span></span>
+<span id="cb7-32"><a href="#cb7-32" tabindex="-1"></a><span class="co">#&gt; ---</span></span>
+<span id="cb7-33"><a href="#cb7-33" tabindex="-1"></a><span class="co">#&gt; Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</span></span></code></pre></div>
 </div>
 </div>
 <div id="plotting-the-cifs" class="section level2">
@@ -536,6 +587,14 @@ failure.</p>
 </div>
 <div id="references" class="section level2">
 <h2>References</h2>
+<ul>
+<li><p>Zhou, B., Fine, J., Latouche, A., &amp; Labopin, M. (2012).
+Competing risks regression for clustered data. Biostatistics, 13(3),
+371-383.</p></li>
+<li><p>Kawaguchi, E. S., Shen, J. I., Suchard, M. A., &amp; Li, G.
+(2021). Scalable algorithms for large competing risks data. Journal of
+Computational and Graphical Statistics, 30(3), 685-693.</p></li>
+</ul>
 </div>
 
 

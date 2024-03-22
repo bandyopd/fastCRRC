@@ -17,12 +17,12 @@ knitr::opts_chunk$set(
 
 ## Introduction
 
-`fastCRRC` is the R package to fit the marginal competing risks regression model for large correlated clustered observations. Let $i=1,2,\ldots,n$ denote the clusters where each cluster has $k=1, \ldots, M_i$ observations. For the $k$th member in cluster $i$,  let $T_{ik}$ and $C_{ik}$ denote the failure and right censoring times, respectively. Then for right censored data, the corresponding observable random variables become $X_{ik}= \min(T_{ik}, C_{ik})$ and $\xi_{ik} = I(T_{ik} \leq C_{ik})\epsilon_{ik}$ where $\epsilon_{ik} \in \{1, \ldots,l\}$ denotes the cause of failure,  $I(\cdot)$ is the indicator function, and $Z_{ik} = (Z_{1ik},...,Z_{pik})^{\top}$ is a $p \times 1$ vector of time-independent covariates for individual $k$ in cluster $i$. 
+`fastCRRC` is the R package to fit the marginal competing risks regression model for large correlated clustered observations. Let $i=1,2,\ldots,n$ denote the clusters where each cluster has $k=1, \ldots, M_i$ observations. For the $k$th member in cluster $i$,  let $T_{ik}$ and $C_{ik}$ denote the failure and right censoring times, respectively. Then for right censored data, the corresponding observable random variables become $X_{ik}= \min(T_{ik}, C_{ik})$ and $\xi_{ik} = I(T_{ik} \leq C_{ik})\epsilon_{ik}$ where $\epsilon_{ik} \in \{1, \ldots,l\}$ denotes the cause of failure,  $I(\cdot)$ is the indicator function, and $Z_{ik} = (Z_{ik1},...,Z_{ikp})^{\top}$ is a $p \times 1$ vector of time-independent covariates for individual $k$ in cluster $i$. 
 
 The marginal cumulative incidence function conditional on the covariates is defined as $F_1(t;Z_{ik}) = P(T_{ik} \leq t, \, \epsilon_{ik} = 1|Z_{ik})$ and the marginal subdistribution hazard is modeled as
 
 \begin{equation}
-\lambda_1(t; Z_{ik}) = \lambda_{10}(t) \exp(\beta'_{0}Z_{ik}),
+\lambda_1(t; Z_{ik}) = \lambda_{10}(t) \exp(\beta^\top_{0}Z_{ik}),
 \end{equation}
 
 where $\lambda_{10}(\cdot)$ is a completely unspecified baseline subdistribution hazard function and $\beta_0$ is a $p \times 1$ vector of unknown regression parameters. 
@@ -52,17 +52,38 @@ fastCrrC(formula, data, subset,cause, id, fitter = c("fastCrr", "crrc"),B = 0,
 
 See the detailed description from `help(fastCrrC)`.
 
-## Data and model fit
+## Data
 
-We first simulate CCR data with two covariates, similar to the data simulation setting of Defor et al. (2024). 
+
+The `simCR()` function is designed to simulate competing risk data, particularly for multicenter studies or studies involving correlated data within clusters. We first provide an overview of the `simCR()` usage, its arguments and  demonstrate how to simulate CCR data with two covariates, similar to the data simulation setting of Defor et al. (2024).  
+
+The `simCR()` function takes several arguments as its input and then provides the simulated dataframe. The following are the arguments `simCR()` allows the user to use.
+
+- `n`: Number of clusters (default = 100).
+- `al` and `ga`: Numerical values from a positive stable distribution for causes 1 and 2, controlling within-cluster correlation (default = 0.3). A value closer to zero indicates a larger within-cluster correlation. 
+- `rho`: The correlation among the covariates.
+- `cen`: Censoring rate, with allowed values of 0%, 20%, 40%, 60%, 65%, and 80%.
+- `clsize`: Range of cluster sizes, specified as a vector (e.g., 2:50).
+- `summary`: When TRUE, prints a summary of the generated data.
+
+To generate data with default settings and view a summary of the generated data, the details are given as follows:
+
 
 ```{r ,warning=FALSE}
 library(fastCRRC)
 set.seed(1)
 dat <- simCR(n = 10, al = .3, ga = .6, clsize = 2:10, summary = TRUE)
+str(dat)
 ```
 
-There are two ways to fit the data to obtain the model estimates using the `fitter` argument in the `fastCrrC`. One uses the two-way linear scan with bootstrap for variance estimation (`fitter="fastCrr"`) and the other uses the traditional marginal CCR model using asymptotic variance estimation (`fitter="crrc"`). We recommend the two-way linear scan for $n > 5000$ or large sample or cluster and cluster sizes. We recommend that the number of bootstrap samples should be `B=100` when using the two way linear scan for large samples. However, for smaller sample sizes we recommend increasing the number of bootstrap samples to `B=200` or as desired to obtain stable standard errors. However, for either fitter arguments to print the standard errors $B$ must be $>0$.
+The simluated data gives the `id` which is the cluster identifier. The event time is given as `time` and the event status is given as `status`. Our simulation provides two covariates, `Z.1` and `Z.2`. For illustration purposes, `Z.1` is generated at the subject specific level and `Z.2` is a generated at the cluster level.
+
+When `summary=TRUE` an overview of the proportion of events in the simulated data is printed. In this simulated data example, only 10 clusters are generated with cluster sizes ranging from 2 to 10. This simulated data shows an average of 7.9 observations per cluster, with an overall observed censoring rate of 72.2%. Initially, before censoring, 77.2% of events were classified as event 1 (the parameter of interest) and 22.8% as event 2 (the competing event). The results due to censoring are also presented in the `summary`. The average proportions of the outcomes per cluster were thus 23.5% for event 1 and 2.9% for event 2.
+
+
+## Model fit
+
+There are two ways to fit the data to obtain the model estimates using the `fitter` argument in the `fastCrrC`. One uses the two-way linear scan with bootstrap for variance estimation (`fitter="fastCrr"`) and the other uses the traditional marginal CCR model using asymptotic variance estimation (`fitter="crrc"`). Even though, we recommend the two-way linear scan for large sample or cluster sizes due to its computational superiority, we suggest to use it for any given scenario. We recommend that the number of bootstrap samples should be `B=100` when using the two way linear scan for large samples. However, for smaller sample sizes we recommend increasing the number of bootstrap samples to `B=200` or as desired to obtain stable standard errors. However, to obtain the standard errors when `fitter="fastCrr"`, then, specific `B>0` in the argument.
 
 ```{r ,warning=FALSE,cache=TRUE}
 # Two-way linear scan optimized for large datasets
@@ -90,9 +111,9 @@ Next, we demonstrate how to optimize the model using the `fitter="fastCrr"` in t
 ```{r ,warning=FALSE,cache=TRUE}
 ## Generating the data
 set.seed(1)
-datL <- simCR(n = 200, al = .3, ga = .6, clsize = 2:500, summary = TRUE)
+datL <- simCR(n = 200, al = .3, ga = .6, clsize = 2:5000, summary = TRUE)
 fitL <- fastCrrC(Surv(time, status) ~ Z.1 + Z.2, data = datL, B = 100, fitter = "fastCrr", 
-                 mcontrols = control(cindex=TRUE, multicore = TRUE))
+                 mcontrols = control(cindex=FALSE, multicore = TRUE))
 ## Fitting the model
 summary(fitL)
 
@@ -123,3 +144,7 @@ plot(foo, type = "stack", newdata = data.frame(Z.1 = .5, Z.2 = 1))
 ```
 
 ## References
+
+* Zhou, B., Fine, J., Latouche, A., & Labopin, M. (2012). Competing risks regression for clustered data. Biostatistics, 13(3), 371-383.
+
+* Kawaguchi, E. S., Shen, J. I., Suchard, M. A., & Li, G. (2021). Scalable algorithms for large competing risks data. Journal of Computational and Graphical Statistics, 30(3), 685-693.
